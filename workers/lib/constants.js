@@ -96,7 +96,10 @@ const RPC_METHODS = [
   { name: 'storeFile', op: 'w' },
   { name: 'loadFile', op: 'r' },
   { name: 'removeFile', op: 'w' },
-  { name: 'listFirmwares', op: 'r' }
+  { name: 'listFirmwares', op: 'r' },
+  { name: 'getAlertConf', op: 'r' },
+  { name: 'getAlertParams', op: 'r' },
+  { name: 'setAlertParams', op: 'w' },
 ]
 
 const INVALID_ACTIONS_ERRORS = [
@@ -131,6 +134,8 @@ const DEFAULT_ACTION_CONFIG_RESOLVERS = {
   }
 }
 
+const ALERT_PARAMS_DB_KEY = 'custom-alert:params'
+
 module.exports = {
   ACTION_TYPES,
   READ_ONLY_ACTIONS,
@@ -144,5 +149,6 @@ module.exports = {
   DEFAULT_TIMEZONE,
   DISALLOWED_QUERY_OPERATORS,
   CONFIG_TYPES,
-  DEFAULT_ACTION_CONFIG_RESOLVERS
+  DEFAULT_ACTION_CONFIG_RESOLVERS,
+  ALERT_PARAMS_DB_KEY,
 }
