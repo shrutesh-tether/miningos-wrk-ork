@@ -740,7 +740,7 @@ class WrkProcAggr extends TetherWrkBase {
       const alertParams = byRackType[rackType]
 
       const rackEntries = await this._getRacksEntries()
-      await async.eachLimit(rackEntries, 1, async (rack) => {
+      await async.eachLimit(rackEntries, 25, async (rack) => {
         if (await this._shouldSkipRackType(rackType, rack.id)) {
           return
         }
