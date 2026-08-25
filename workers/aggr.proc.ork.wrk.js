@@ -17,8 +17,7 @@ const {
   DEFAULT_TIMEZONE,
   DISALLOWED_QUERY_OPERATORS,
   CONFIG_TYPES,
-  DEFAULT_ACTION_CONFIG_RESOLVERS,
-  ALERT_PARAMS_DB_KEY
+  DEFAULT_ACTION_CONFIG_RESOLVERS
 } = require('./lib/constants')
 const aggrCrossthg = require('./lib/aggr.crossthg')
 const { setTimeout: sleep } = require('timers/promises')
@@ -723,108 +722,40 @@ class WrkProcAggr extends TetherWrkBase {
     return await this.dataProxy.requestData('getThingConf', req, { timeout: 10000, type: req.type })
   }
 
-  async getAlertConf (req) {
-    const entries = await this._getRacksEntries()
-
-    const confEntries = await async.mapLimit(entries, 25, async (rack) => {
-      try {
-        const alertConf = await this.dataProxy.requestRackData(
-          rack.id,
-          'getAlertConf',
-          {},
-          { timeout: 10000 }
-        )
-        return [rack.id, alertConf]
-      } catch (e) {
-        if (!INVALID_ACTIONS_ERRORS.some(err => e.message?.includes(err))) {
-          throw e
-        }
-      }
-    })
-
-    const filteredConfEntries = confEntries.filter(Boolean)
-
-    return Object.fromEntries(filteredConfEntries)
-  }
-
-  async getAlertParams (req) {
-    const stored = await this.configsDb.get(ALERT_PARAMS_DB_KEY)
-    if (!stored) {
-      return {byRack: {}}
-    }
-
-    const entries = await this._getRacksEntries()
-
-    const params = JSON.parse(stored.value.toString())
-    const result = {}
-    for (const rack of entries) {
-      result[rack.id] = params.byRack[rack.id]
-    }
-
-    return {
-      byRack: result
-    }
-  }
-
   async setAlertParams (req) {
     if (!req || typeof req !== 'object') {
       throw new Error('ERR_ALERT_CONFIGS_INVALID')
     }
 
-    const byRack = req.byRack
-    if (!byRack) {
-      throw new Error('ERR_BY_RACK_MISSING')
+    const byRackType = req.byRackType
+    if (!byRackType) {
+      throw new Error('ERR_BY_RACK_TYPE_MISSING')
     }
 
-    if (typeof byRack !== 'object' || Array.isArray(byRack)) {
-      throw new Error('ERR_BY_RACK_INVALID')
+    if (typeof byRackType !== 'object' || Array.isArray(byRackType)) {
+      throw new Error('ERR_BY_RACK_TYPE_INVALID')
     }
-    
-    const doc = {
-      byRack,
-      updatedAt: new Date(),
-    }
-    await this.configsDb.put(ALERT_PARAMS_DB_KEY, Buffer.from(JSON.stringify(doc)))
 
-    // The approver used to provide change history for free; record it explicitly now.
-    debug('alert configs updated by=%s racks=%d', doc.updatedBy, Object.keys(byRack).length)
+    for (const rackType in byRackType) {
+      const alertParams = byRackType[rackType]
 
-    return doc
-  }
+      const rackEntries = await this._getRacksEntries()
+      await async.eachLimit(rackEntries, 1, async (rack) => {
+        if (await this._shouldSkipRackType(rackType, rack.id)) {
+          return
+        }
 
-  async _syncRackAlertParams (rack, paramsByRack) {
-    try {
-      const alertParams = paramsByRack[rack.id]
-      if (!alertParams) {
-        return
-      }
-
-      await this.dataProxy.requestRackData(
-        rack.id,
-        'saveWrkSettings',
-        { entries: { alertParams } },
-        { timeout: 10000 }
-      )
-    } catch (e) {
-      this.debugError(`syncAlertConfigs ${rack.id}`, e, true)
-    }
-  }
-
-  async syncAlertParams () {
-    if (this._syncingAlertConfigs) return
-    this._syncingAlertConfigs = true
-
-    try {
-      const doc = await this.getAlertParams()
-      const entries = await this._getRacksEntries()
-
-      await async.eachLimit(entries, 25, async (rack) => {
-        await this._syncRackAlertParams(rack, doc.byRack ?? {})
+        try {
+          await this.dataProxy.requestRackData(
+            rack.id,
+            'saveWrkSettings',
+            { entries: { alertParams } },
+            { timeout: 10000 }
+          )
+        } catch (e) {
+          this.debugError(`saveWrkSettings failed for rack: ${rack.id} in setAlertParams`, e, true)
+        }
       })
-    } catch (e) {
-      this.debugError('ERR_SYNC_ALERT_CONFIGS', e, true)
-    } finally {
-      this._syncingAlertConfigs = false
     }
   }
 
@@ -1516,12 +1447,6 @@ class WrkProcAggr extends TetherWrkBase {
             this.conf.crossAggrAction.agrrListThingsIntvlMs || 10000
           )
         }
-
-        this.interval_0.add(
-          'alert-params-sync',
-          this.syncAlertParams.bind(this),
-          this.conf.ork.alertParamSyncIntvlMs || 60000
-        )
 
         rpcServer.respond('echo', x => x)
 
