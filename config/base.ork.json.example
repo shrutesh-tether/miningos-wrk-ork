@@ -3,7 +3,6 @@
     "callTargetsLimit": 500,
     "automationIntvlMs": 60000,
     "automationTypes": [],
-    "alertParamSyncIntvlMs": 60000,
     "orkActions": {
         "registerConfig": {
             "enabled": true,
