@@ -757,6 +757,8 @@ class WrkProcAggr extends TetherWrkBase {
         }
       })
     }
+
+    return 1
   }
 
   async getAction (req) {
