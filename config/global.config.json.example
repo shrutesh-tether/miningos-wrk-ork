@@ -23,21 +23,21 @@
   "isAutoSleepAllowed": false,
   "approvedPoolUrls": [
     {
-      "id": "f2pool-btc-1",
-      "name": "F2Pool",
-      "host": "btc.f2pool.com",
+      "id": "pool-1",
+      "name": "Pool 1",
+      "host": "test.pool1.com",
       "port": 1314
     },
     {
-      "id": "ocean-btc-2",
-      "name": "Ocean",
-      "host": "mine.ocean.xyz",
+      "id": "pool-2",
+      "name": "Pool 2",
+      "host": "test.pool2.com",
       "port": 3334
     },
     {
-      "id": "antpool-btc-3",
-      "name": "Antpool",
-      "host": "ss.antpool.com",
+      "id": "pool-2",
+      "name": "Pool 2",
+      "host": "test.pool2.com",
       "port": 3333
     }
   ]
