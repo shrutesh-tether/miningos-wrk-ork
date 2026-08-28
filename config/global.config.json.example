@@ -20,5 +20,25 @@
     "medium": 1300000,
     "high": 1400000
   },
-  "isAutoSleepAllowed": false
+  "isAutoSleepAllowed": false,
+  "approvedPoolUrls": [
+    {
+      "id": "f2pool-btc-1",
+      "name": "F2Pool",
+      "host": "btc.f2pool.com",
+      "port": 1314
+    },
+    {
+      "id": "ocean-btc-2",
+      "name": "Ocean",
+      "host": "mine.ocean.xyz",
+      "port": 3334
+    },
+    {
+      "id": "antpool-btc-3",
+      "name": "Antpool",
+      "host": "ss.antpool.com",
+      "port": 3333
+    }
+  ]
 }
