@@ -219,7 +219,8 @@ class WrkProcAggr extends TetherWrkBase {
       throw new Error('ERR_LOG_TYPE_INVALID')
     }
 
-    const collection = await this.dataProxy.requestData('getHistoricalLogs', req, { timeout: 10000 })
+    // type narrows the fan-out to racks of that type (e.g. dcs for logs only it owns)
+    const collection = await this.dataProxy.requestData('getHistoricalLogs', req, { timeout: 10000, type: req.type })
 
     if (!req.sort) {
       return collection
@@ -228,6 +229,14 @@ class WrkProcAggr extends TetherWrkBase {
     const query = new mingo.Query({})
     const cursor = query.find(collection).sort(req.sort)
     return cursor.all()
+  }
+
+  async saveHistoricalLog (req) {
+    if (!req.logType) throw new Error('ERR_LOG_TYPE_INVALID')
+    // writable historical logs are owned by a specific rack type; never broadcast
+    if (!req.type) throw new Error('ERR_TYPE_INVALID')
+
+    return await this.dataProxy.requestData('saveHistoricalLog', req, { timeout: 10000, type: req.type })
   }
 
   async forgetThings (req) {
