@@ -70,6 +70,7 @@ const RPC_METHODS = [
   { name: 'listThings', op: 'r' },
   { name: 'getThingsCount', op: 'r' },
   { name: 'getHistoricalLogs', op: 'r' },
+  { name: 'saveHistoricalLog', op: 'w' },
   { name: 'forgetThings', op: 'w' },
   { name: 'tailLog', op: 'r' },
   { name: 'tailLogMulti', op: 'r' },
